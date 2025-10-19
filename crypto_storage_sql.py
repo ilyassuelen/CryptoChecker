@@ -37,12 +37,21 @@ def fetch_crypto_data(symbol):
         response = requests.get(url)
         data = response.json()
 
-        if data.get("status") != "success":
+        if data.get("status") != "success" or not data.get("symbols"):
             print(f"Cryptocurrency '{symbol}' not found in FreeCryptoAPI Database.")
             return None
 
+        # Extract data from API response
+        info = data["symbols"][0]
+
+        last_price = float(info.get("last", 0))
+        lowest_price = float(info.get("lowest", 0))
+        highest_price = float(info.get("highest", 0))
+        daily_change_percentage = float(info.get("daily_change_percentage", 0))
+        source_exchange = info.get("source_exchange", "Unknown")
+
         return {
-            "symbol": data.get("symbol", symbol),
+            "symbol": info.get("symbol", symbol),
             "last_price": last_price,
             "lowest_price": lowest_price,
             "highest_price": highest_price,
@@ -77,3 +86,44 @@ def add_user(name):
             print(f"User '{name}' created successfully.\n")
         except Exception as e:
             print(f"Errorr adding user: {e}")
+
+
+# ------------------------------
+# Crypto management (per user)
+# ------------------------------
+def list_cryptos(user_id):
+    """Retrieve all cryptos for the given user_id from the Database."""
+    with engine.connect() as connection:
+        result = connection.execute(
+            text("SELECT symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange FROM cryptos WHERE user_id = :user_id"),
+            {"user_id": user_id}
+        )
+        cryptos = result.fetchall()
+
+    return {
+        row[0]: {
+            "last_price": row[1],
+            "lowest_price": row[2],
+            "highest_price": row[3],
+            "daily_change_percentage": row[4],
+            "source_exchange": row[5]
+        }
+        for row in cryptos
+    }
+
+
+def add_crypto(symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, user_id):
+    """Add a new Cryptocurrency to the database for a specific user."""
+    with engine.connect() as connection:
+        try:
+            connection.execute(
+                text(
+                    "INSERT INTO cryptos (symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, user_id) "
+                    "VALUES (:symbol, :last_price, :lowest_price, :highest_price, :daily_change_percentage, :source_exchange, :user_id)"
+                ),
+                {"symbol": symbol, "last_price": last_price, "lowest_price": lowest_price, "highest_price": highest_price, "daily_change_percentage": daily_change_percentage, "source_exchange": source_exchange, "user_id": user_id}
+            )
+            connection.commit()
+
+        except Exception as e:
+            print(f"Error: {e}")

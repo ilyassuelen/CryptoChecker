@@ -73,6 +73,45 @@ def select_user():
 
     return users[choice - 1][0]
 
+
+def list_cryptos(user_id):
+    """List all cryptos from the database."""
+    cryptos = storage.list_cryptos(user_id)
+    print(f"{len(cryptos)} Cryptocurrencies in total")
+    for symbol, data in cryptos.items():
+        print(f"{symbol} (Last Price: {data["last_price"]}$ | Change percentage today: {data["daily_change_percentage"]:.1f}% | Lowest Price today: {data["lowest_price"]}$ | Highest Price today: {data["highest_price"]}$ | Source Exchange: {data["source_exchange"]})")
+
+
+def add_crypto(user_id):
+    """Add a new Cryptocurrency using FreeCryptoAPI."""
+    crypto_symbol = input("Enter crypto symbol: ")
+
+    # Fetch data from FreeCryptoAPI
+    crypto_data = storage.fetch_crypto_data(crypto_symbol)
+    if crypto_data is None:
+        print("Cryptocurrency not found at FreeCryptoAPI.")
+        return
+
+    # Check if the Cryptocurrency already exists in the database
+    cryptos = storage.list_cryptos(user_id)
+    for symbol in cryptos:
+        if symbol.lower() == crypto_symbol.lower():
+            print(f"Cryptocurrency '{crypto_symbol}' already exists!")
+            return
+
+    # Add Cryptocurrency to the database
+    storage.add_crypto(
+        crypto_data["symbol"],
+        crypto_data["last_price"],
+        crypto_data["lowest_price"],
+        crypto_data["highest_price"],
+        crypto_data["daily_change_percentage"],
+        crypto_data["source_exchange"],
+        user_id
+    )
+    print(f"Cryptocurrency '{crypto_data['symbol']}' successfully added.")
+
+
 def main():
     """Main program loop for the Cryptocurrency Database application."""
     # Choose user
