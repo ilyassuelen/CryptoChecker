@@ -22,6 +22,8 @@ with engine.connect() as connection:
             highest_price REAL NOT NULL,
             daily_change_percentage REAL NOT NULL,
             source_exchange TEXT NOT NULL,
+            amount REAL,
+            investment REAL,
             user_id INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users (id)
         )
@@ -41,7 +43,6 @@ def fetch_crypto_data(symbol):
             print(f"Cryptocurrency '{symbol}' not found in FreeCryptoAPI Database.")
             return None
 
-        # Extract data from API response
         info = data["symbols"][0]
 
         last_price = float(info.get("last", 0))
@@ -68,14 +69,12 @@ def fetch_crypto_data(symbol):
 # User management
 # ---------------------
 def list_users():
-    """Retrieve all users from the database."""
     with engine.connect() as connection:
         result = connection.execute(text("SELECT id, name FROM users"))
         return result.fetchall()
 
 
 def add_user(name):
-    """Add a new user to the database."""
     with engine.connect() as connection:
         try:
             connection.execute(
@@ -85,7 +84,7 @@ def add_user(name):
             connection.commit()
             print(f"User '{name}' created successfully.\n")
         except Exception as e:
-            print(f"Errorr adding user: {e}")
+            print(f"Error adding user: {e}")
 
 
 # ------------------------------
@@ -95,7 +94,7 @@ def list_cryptos(user_id):
     """Retrieve all cryptos for the given user_id from the Database."""
     with engine.connect() as connection:
         result = connection.execute(
-            text("SELECT symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange FROM cryptos WHERE user_id = :user_id"),
+            text("SELECT symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, amount, investment FROM cryptos WHERE user_id = :user_id"),
             {"user_id": user_id}
         )
         cryptos = result.fetchall()
@@ -106,31 +105,41 @@ def list_cryptos(user_id):
             "lowest_price": row[2],
             "highest_price": row[3],
             "daily_change_percentage": row[4],
-            "source_exchange": row[5]
+            "source_exchange": row[5],
+            "amount": row[6],
+            "investment": row[7]
         }
         for row in cryptos
     }
 
 
-def add_crypto(symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, user_id):
+def add_crypto(symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, amount, investment, user_id):
     """Add a new Cryptocurrency to the database for a specific user."""
     with engine.connect() as connection:
         try:
             connection.execute(
                 text(
-                    "INSERT INTO cryptos (symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, user_id) "
-                    "VALUES (:symbol, :last_price, :lowest_price, :highest_price, :daily_change_percentage, :source_exchange, :user_id)"
+                    "INSERT INTO cryptos (symbol, last_price, lowest_price, highest_price, daily_change_percentage, source_exchange, amount, investment, user_id) "
+                    "VALUES (:symbol, :last_price, :lowest_price, :highest_price, :daily_change_percentage, :source_exchange, :amount, :investment, :user_id)"
                 ),
-                {"symbol": symbol, "last_price": last_price, "lowest_price": lowest_price, "highest_price": highest_price, "daily_change_percentage": daily_change_percentage, "source_exchange": source_exchange, "user_id": user_id}
+                {
+                    "symbol": symbol,
+                    "last_price": last_price,
+                    "lowest_price": lowest_price,
+                    "highest_price": highest_price,
+                    "daily_change_percentage": daily_change_percentage,
+                    "source_exchange": source_exchange,
+                    "amount": amount,
+                    "investment": investment,
+                    "user_id": user_id
+                }
             )
             connection.commit()
-
         except Exception as e:
             print(f"Error: {e}")
 
 
 def delete_crypto(symbol, user_id):
-    """Delete a Cryptocurrency from the database for a specific user."""
     with engine.connect() as connection:
         try:
             result = connection.execute(
