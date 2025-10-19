@@ -79,7 +79,7 @@ def list_cryptos(user_id):
     cryptos = storage.list_cryptos(user_id)
     print(f"{len(cryptos)} Cryptocurrencies in total")
     for symbol, data in cryptos.items():
-        print(f"{symbol} (Last Price: {data["last_price"]}$ | Change percentage today: {data["daily_change_percentage"]:.1f}% | Lowest Price today: {data["lowest_price"]}$ | Highest Price today: {data["highest_price"]}$ | Source Exchange: {data["source_exchange"]})")
+        print(f"{symbol} (Last Price: {data['last_price']}$ | Change percentage today: {data['daily_change_percentage']:+.1f}% | Lowest Price today: {data['lowest_price']}$ | Highest Price today: {data['highest_price']}$ | Source Exchange: {data['source_exchange']})")
 
 
 def add_crypto(user_id):
@@ -117,6 +117,47 @@ def delete_crypto(user_id):
     symbol_name = input("Symbol name from Cryptocurrency: ")
 
     storage.delete_crypto(symbol_name, user_id)
+
+
+def crypto_stats(user_id):
+    """Show the crypto with the highest percentage increase and exchange statistics."""
+    cryptos = storage.list_cryptos(user_id)
+
+    if not cryptos:
+        print("No cryptocurrencies found.")
+        return
+
+    # Sort cryptos by daily change percentage (descending)
+    sorted_cryptos = sorted(cryptos.items(), key=lambda x: x[1]["daily_change_percentage"], reverse=True)
+
+    print("\n--- Cryptocurrencies sorted by daily change percentage ---")
+    for symbol, data in sorted_cryptos:
+        print(f"{symbol}: {data['daily_change_percentage']:+.2f}%")
+
+    # Find exchange counts
+    exchange_counts = {}
+    for _, data in cryptos.items():
+        exchange = data["source_exchange"]
+        exchange_counts[exchange] = exchange_counts.get(exchange, 0) + 1
+
+    # Sort exchanges by number of coins (descending)
+    sorted_exchanges = sorted(exchange_counts.items(), key=lambda x: x[1], reverse=True)
+
+    print("\n--- Number of coins per exchange ---")
+    for exchange, count in sorted_exchanges:
+        print(f"{exchange.capitalize()}: {count}")
+
+
+def search_crypto(user_id):
+    pass
+
+
+def cryptos_sorted_by_biggest_daily_change(user_id):
+    pass
+
+
+def cryptos_sorted_by_source_exchange(user_id):
+    pass
 
 
 def main():
