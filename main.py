@@ -112,6 +112,13 @@ def add_crypto(user_id):
     print(f"Cryptocurrency '{crypto_data['symbol']}' successfully added.")
 
 
+def delete_crypto(user_id):
+    """Delete a Cryptocurrency by symbol."""
+    symbol_name = input("Symbol name from Cryptocurrency: ")
+
+    storage.delete_crypto(symbol_name, user_id)
+
+
 def main():
     """Main program loop for the Cryptocurrency Database application."""
     # Choose user

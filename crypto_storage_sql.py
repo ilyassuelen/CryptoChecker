@@ -127,3 +127,21 @@ def add_crypto(symbol, last_price, lowest_price, highest_price, daily_change_per
 
         except Exception as e:
             print(f"Error: {e}")
+
+
+def delete_crypto(symbol, user_id):
+    """Delete a Cryptocurrency from the database for a specific user."""
+    with engine.connect() as connection:
+        try:
+            result = connection.execute(
+                text("DELETE FROM cryptos WHERE symbol = :symbol AND user_id = :user_id;"),
+                {"symbol": symbol, "user_id": user_id}
+            )
+            connection.commit()
+
+            if result.rowcount > 0:
+                print(f"Cryptocurrency '{symbol}' removed successfully.")
+            else:
+                print(f"Cryptocurrency '{symbol}' not found.")
+        except Exception as e:
+            print(f"Error: {e}")
