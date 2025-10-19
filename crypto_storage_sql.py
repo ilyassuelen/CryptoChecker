@@ -53,3 +53,27 @@ def fetch_crypto_data(symbol):
     except requests.RequestException as e:
         print(f"Error accessing FreeCryptoAPI: {e}")
         return None
+
+
+# ---------------------
+# User management
+# ---------------------
+def list_users():
+    """Retrieve all users from the database."""
+    with engine.connect() as connection:
+        result = connection.execute(text("SELECT id, name FROM users"))
+        return result.fetchall()
+
+
+def add_user(name):
+    """Add a new user to the database."""
+    with engine.connect() as connection:
+        try:
+            connection.execute(
+                text("INSERT INTO users (name) VALUES (:name)"),
+                {"name": name}
+            )
+            connection.commit()
+            print(f"User '{name}' created successfully.\n")
+        except Exception as e:
+            print(f"Errorr adding user: {e}")
